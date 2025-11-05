@@ -9,5 +9,6 @@ services:
         fromSecret: TELEGRAM_BOT_TOKEN
     secretEnvVars:
       - key: TELEGRAM_BOT_TOKEN
-        value: your_bot_token_here  # ← Сюда вставь реальный токен
+        value: your_bot_token_here  
+
     env: production
