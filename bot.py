@@ -1,46 +1,52 @@
-import telebot
-import requests
-import os
+import logging
+import os  # <-- добавили
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-# Токен берётся из переменных окружения
-API_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-if not API_TOKEN:
-    raise ValueError("Токен не найден! Установите переменную окружения TELEGRAM_BOT_TOKEN")
+# Включим логирование
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
-bot = telebot.TeleBot(API_TOKEN)
+JOKES = [
+    "Почему программисты не ходят в лес? Боются деревьев с null-ветками!",
+    "Какой язык самый грустный? JavaScript — потому что в нём всё может быть undefined.",
+    "Зачем AI пошёл к психологу? У него был deep learning... но не deep feeling."
+]
 
-# Простые ответы на сообщения
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    bot.reply_to(message, "Привет! Я бот, который может рассказать шутку. Напиши /joke, чтобы послушать!")
+joke_index = 0
 
-@bot.message_handler(commands=['joke'])
-def send_joke(message):
-    # Получаем шутку с API
-    try:
-        response = requests.get("https://v2.jokeapi.dev/joke/Any?safe-mode")
-        data = response.json()
-        if data["type"] == "single":
-            joke = data["joke"]
-        else:
-            joke = f"{data['setup']} ... {data['delivery']}"
-        bot.reply_to(message, joke)
-    except Exception as e:
-        bot.reply_to(message, "Не удалось получить шутку. Попробуй ещё раз!")
-        print(f"Ошибка получения шутки: {e}")
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    await update.message.reply_text(
+        f"Привет, {user.first_name}! 👋\n"
+        "Че кого!"
+    )
 
-# Ответ на обычные сообщения
-@bot.message_handler(func=lambda message: True)
-def echo_message(message):
-    text = message.text.lower()
-    if 'привет' in text or 'здравствуй' in text:
-        bot.reply_to(message, "Привет! Напиши /joke, чтобы услышать шутку!")
-    elif 'как дела' in text:
-        bot.reply_to(message, "Отлично, спасибо! А у тебя?")
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.lower()
+    if "шутка" in text or "анекдот" in text or "joke" in text:
+        global joke_index
+        joke = JOKES[joke_index]
+        joke_index = (joke_index + 1) % len(JOKES)
+        await update.message.reply_text(joke)
     else:
-        bot.reply_to(message, "Я пока не понимаю всё, но знаю много шуток! Попробуй /joke")
+        await update.message.reply_text("Интересно! А теперь скажи «шутка» 😉")
 
-# Запуск бота
-if __name__ == '__main__':
-    print("Бот запущен...")
-    bot.infinity_polling()
+def main():
+    # 🔒 Получаем токен из переменной окружения
+    TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+    if not TOKEN:
+        raise ValueError("❌ Переменная окружения TELEGRAM_BOT_TOKEN не установлена!")
+
+    app = Application.builder().token(TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    print("✅ Бот запущен и готов к работе!")
+    app.run_polling()
+
+if __name__ == "__main__":
+    main()
