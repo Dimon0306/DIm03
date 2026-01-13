@@ -16,6 +16,17 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 if not TELEGRAM_TOKEN:
     raise ValueError("❌ Переменная окружения TELEGRAM_BOT_TOKEN не установлена!")
 
+JOKES = [
+    "Почему программисты не ходят в лес? Боются деревьев с null-ветками!",
+    "Какой язык самый грустный? JavaScript — потому что в нём всё может быть undefined.",
+    "Зачем AI пошёл к психологу? У него был deep learning... но не deep feeling.",
+    "Сколько программистов нужно, чтобы поменять лампочку? Ни одного — это аппаратная проблема!",
+    "Почему Python такой популярный? Потому что у него нет скобок... и проблем!",
+    "Что говорит программист своей девушке? «Ты — моя единственная true!»",
+    "Почему Java-разработчики носят очки? Потому что не могут C#!",
+    "Как называется дата, когда программист выходит на улицу? Исключение!",
+]
+
 # === URL вашего бота на Render (обязательно HTTPS) ===
 # Render автоматически даёт URL вида: https://<ваш-проект>.onrender.com
 # Но мы получим его динамически через заголовок Host или зададим вручную
@@ -32,39 +43,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Привет! Я бот с Webhook. Напиши /joke — расскажу шутку!"
     )
 async def joke(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    import requests
-    try:
-        # Убраны пробелы, добавлен таймаут и заголовок (на случай блокировки)
-        resp = requests.get(
-            "https://v2.jokeapi.dev/joke/Any?safe-mode",
-            timeout=5,
-            headers={"User-Agent": "Telegram-Joke-Bot/1.0"}
-        )
-        resp.raise_for_status()  # вызовет исключение при 4xx/5xx
-        data = resp.json()
-
-        if data.get("error"):
-            text = "Не удалось найти шутку 😕"
-        elif data["type"] == "single":
-            text = data.get("joke", "Шутка была... но потерялась.")
-        else:
-            setup = data.get("setup", "").strip()
-            delivery = data.get("delivery", "").strip()
-            if setup and delivery:
-                text = f"{setup}\n\n... {delivery}"
-            else:
-                text = "Анекдот слишком загадочный даже для меня!"
-        
-        await update.message.reply_text(text)
-
-    except requests.exceptions.Timeout:
-        await update.message.reply_text("Сервер шуток не отвечает. Попробуй позже!")
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Ошибка сети при запросе шутки: {e}")
-        await update.message.reply_text("Не удаётся подключиться к сервису шуток.")
-    except Exception as e:
-        logger.error(f"Неожиданная ошибка при получении шутки: {e}")
-        await update.message.reply_text("Что-то пошло не так... Но я уже чиню!")
+    selected_joke = random.choice(JOKES)
+    await update.message.reply_text(selected_joke)
+  
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.lower()
