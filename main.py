@@ -31,35 +31,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Привет! Я бот с Webhook. Напиши /joke — расскажу шутку!"
     )
-
-@bot.message_handler(commands=['joke'])
-def send_joke(message):
+async def joke(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    import requests
     try:
-        # Убраны лишние пробелы в URL!
-        response = requests.get("https://v2.jokeapi.dev/joke/Any?safe-mode", timeout=5)
-        response.raise_for_status()  # Проверка HTTP-ошибок
-        data = response.json()
-
-        if data.get("error"):
-            joke_text = "Не удалось найти шутку 😕"
-        elif data["type"] == "single":
-            joke_text = data.get("joke", "Шутка была... но потерялась по дороге.")
+        resp = requests.get("https://v2.jokeapi.dev/joke/Any?safe-mode")
+        data = resp.json()
+        if data["type"] == "single":
+            text = data["joke"]
         else:
-            setup = data.get("setup", "")
-            delivery = data.get("delivery", "")
-            if setup and delivery:
-                joke_text = f"{setup}\n\n... {delivery}"
-            else:
-                joke_text = "Хм... Эта шутка слишком загадочная даже для меня!"
-
-        bot.reply_to(message, joke_text)
-
-    except requests.exceptions.RequestException as e:
-        print(f"Ошибка сети: {e}")
-        bot.reply_to(message, "Сеть недоступна. Попробуй позже!")
+            text = f"{data['setup']} ... {data['delivery']}"
+        await update.message.reply_text(text)
     except Exception as e:
-        print(f"Неожиданная ошибка: {e}")
-        bot.reply_to(message, "Что-то пошло не так... Но я работаю над этим!")
+        logger.error(f"Ошибка получения шутки: {e}")
+        await update.message.reply_text("Не удалось получить шутку. Попробуй позже.")
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.lower()
@@ -117,4 +101,5 @@ async def telegram_webhook(request: Request):
     except Exception as e:
         logger.error(f"Ошибка обработки webhook: {e}")
         return Response(status_code=500)
+
 
