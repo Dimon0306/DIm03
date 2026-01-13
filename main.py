@@ -16,6 +16,16 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 if not TELEGRAM_TOKEN:
     raise ValueError("❌ Переменная окружения TELEGRAM_BOT_TOKEN не установлена!")
 
+ JOKES = [
+    "Почему программисты не ходят в лес? Боются деревьев с null-ветками!",
+    "Какой язык самый грустный? JavaScript — потому что в нём всё может быть undefined.",
+    "Зачем AI пошёл к психологу? У него был deep learning... но не deep feeling.",
+    "Сколько программистов нужно, чтобы поменять лампочку? Ни одного — это аппаратная проблема!",
+    "Почему Python такой популярный? Потому что у него нет скобок... и проблем!",
+    "Что говорит программист своей девушке? «Ты — моя единственная true!»",
+    "Почему Java-разработчики носят очки? Потому что не могут C#!",
+    "Как называется дата, когда программист выходит на улицу? Исключение!",
+]
 
 
 # === URL вашего бота на Render (обязательно HTTPS) ===
@@ -36,16 +46,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def joke(update: Update, context: ContextTypes.DEFAULT_TYPE):
     selected_joke = random.choice(JOKES)
     await update.message.reply_text(selected_joke)
-    JOKES = [
-    "Почему программисты не ходят в лес? Боются деревьев с null-ветками!",
-    "Какой язык самый грустный? JavaScript — потому что в нём всё может быть undefined.",
-    "Зачем AI пошёл к психологу? У него был deep learning... но не deep feeling.",
-    "Сколько программистов нужно, чтобы поменять лампочку? Ни одного — это аппаратная проблема!",
-    "Почему Python такой популярный? Потому что у него нет скобок... и проблем!",
-    "Что говорит программист своей девушке? «Ты — моя единственная true!»",
-    "Почему Java-разработчики носят очки? Потому что не могут C#!",
-    "Как называется дата, когда программист выходит на улицу? Исключение!",
-]
+
   
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -104,6 +105,7 @@ async def telegram_webhook(request: Request):
     except Exception as e:
         logger.error(f"Ошибка обработки webhook: {e}")
         return Response(status_code=500)
+
 
 
 
