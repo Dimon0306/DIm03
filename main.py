@@ -34,16 +34,37 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def joke(update: Update, context: ContextTypes.DEFAULT_TYPE):
     import requests
     try:
-        resp = requests.get("https://v2.jokeapi.dev/joke/Any?safe-mode")
+        # Убраны пробелы, добавлен таймаут и заголовок (на случай блокировки)
+        resp = requests.get(
+            "https://v2.jokeapi.dev/joke/Any?safe-mode",
+            timeout=5,
+            headers={"User-Agent": "Telegram-Joke-Bot/1.0"}
+        )
+        resp.raise_for_status()  # вызовет исключение при 4xx/5xx
         data = resp.json()
-        if data["type"] == "single":
-            text = data["joke"]
+
+        if data.get("error"):
+            text = "Не удалось найти шутку 😕"
+        elif data["type"] == "single":
+            text = data.get("joke", "Шутка была... но потерялась.")
         else:
-            text = f"{data['setup']} ... {data['delivery']}"
+            setup = data.get("setup", "").strip()
+            delivery = data.get("delivery", "").strip()
+            if setup and delivery:
+                text = f"{setup}\n\n... {delivery}"
+            else:
+                text = "Анекдот слишком загадочный даже для меня!"
+        
         await update.message.reply_text(text)
+
+    except requests.exceptions.Timeout:
+        await update.message.reply_text("Сервер шуток не отвечает. Попробуй позже!")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Ошибка сети при запросе шутки: {e}")
+        await update.message.reply_text("Не удаётся подключиться к сервису шуток.")
     except Exception as e:
-        logger.error(f"Ошибка получения шутки: {e}")
-        await update.message.reply_text("Не удалось получить шутку. Попробуй позже.")
+        logger.error(f"Неожиданная ошибка при получении шутки: {e}")
+        await update.message.reply_text("Что-то пошло не так... Но я уже чиню!")
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.lower()
@@ -101,5 +122,6 @@ async def telegram_webhook(request: Request):
     except Exception as e:
         logger.error(f"Ошибка обработки webhook: {e}")
         return Response(status_code=500)
+
 
 
