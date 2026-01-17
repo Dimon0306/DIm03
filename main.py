@@ -5,6 +5,7 @@ import logging
 from fastapi import FastAPI, Request, Response
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 # === Настройка логирования ===
 logging.basicConfig(
@@ -47,6 +48,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def joke(update: Update, context: ContextTypes.DEFAULT_TYPE):
     selected_joke = random.choice(JOKES)
     await update.message.reply_text(selected_joke)
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [
+            InlineKeyboardButton("😄 Шутка", callback_data="joke"),
+            InlineKeyboardButton("ℹ️ Помощь", callback_data="help")
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("Что хотите?", reply_markup=reply_markup)
     
   
 
@@ -106,6 +117,7 @@ async def telegram_webhook(request: Request):
     except Exception as e:
         logger.error(f"Ошибка обработки webhook: {e}")
         return Response(status_code=500)
+
 
 
 
