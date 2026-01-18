@@ -58,6 +58,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("Что хотите?", reply_markup=reply_markup)
+
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()  # обязательно — убирает "часики"
+
+    if query.data == "joke":
+        # Ваша логика шутки
+        await query.message.reply_text("Вот шутка!")
+    elif query.data == "help":
+        await query.message.reply_text("Помощь...")
     
   
 
@@ -74,7 +84,7 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("joke", joke))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
-
+application.add_handler(CallbackQueryHandler(button_handler))
 # === Запуск Webhook при старте сервера ===
 async def set_webhook():
     """Устанавливает Webhook в Telegram"""
@@ -117,6 +127,7 @@ async def telegram_webhook(request: Request):
     except Exception as e:
         logger.error(f"Ошибка обработки webhook: {e}")
         return Response(status_code=500)
+
 
 
 
